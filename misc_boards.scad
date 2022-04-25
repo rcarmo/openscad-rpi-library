@@ -13,13 +13,35 @@ include <misc_parts.scad>;
 // used to avoid the manifold problem.
 interf = 0.1;
 
+// $incolor is used to determine if color should be applied or colors should
+// be undef. Colors must be defined per module to allow for this to override.
+$incolor = (is_undef($incolor)) ? true : $incolor;
+
+//------------------------------------------------------------------------
+// m25_standard_hole Standard fit M2.5 hole size definition
+//------------------------------------------------------------------------
+module m25_standard_hole() {
+	circle(r=(2.75 / 2), $fn=16);
+}
+
+//------------------------------------------------------------------------
+// Move copies of children to positions in passed array
+//------------------------------------------------------------------------
+module array_holes(pos) {
+	for (pos=pos) {			
+			translate(pos) children();
+	}
+}
+
 //------------------------------------------------------------------------
 // 1602A LCD panel 16x2 characters.
 //------------------------------------------------------------------------
 module lcd_1602a() {
     $fn = 32;
+	boardc  = $incolor ? "green"  : undef;
+
     translate([4.5, 5.5, 1.8])  color([64/255, 64/255, 128/255]) cube([71, 24, 7]);
-    color("green") linear_extrude(height = 1.8) difference() {
+    color(boardc) linear_extrude(height = 1.8) difference() {
         square(size=[80, 36]);
         translate([3, 3])           circle(r=3.2/2, center = true);
         translate([80 - 3, 3])      circle(r=3.2/2, center = true);
@@ -33,12 +55,15 @@ module lcd_1602a() {
 //------------------------------------------------------------------------
 module pin_headers(cols, rows) {
     w = 2.54; h = 2.54; p = 0.65;
+	pinc  = $incolor ? "gold"  : undef;
+	basec = $incolor ? "black" : undef;
+	
     for(x = [0 : (cols -1)]) {
         for(y = [0 : (rows  - 1)]) {
             translate([w * x, w * y, 0]) {
                 union() {
-                    color("black") cube([w, w, h]);
-                    color("gold")  translate([(w - p) / 2, (w - p) / 2, -3]) cube([p, p, 11.54]);
+                    color(basec) cube([w, w, h]);
+                    color(pinc)  translate([(w - p) / 2, (w - p) / 2, -3]) cube([p, p, 11.54]);
                 }
             }
         }
@@ -51,8 +76,9 @@ module pin_headers(cols, rows) {
 module board_2relays_sainsmart() {
     // Board with 3.0 mm holes.
     pcb_thick = 1.6;
+	boardc = $incolor ? "darkgreen" : undef;
     difference() {
-        color("darkgreen") cube([39.0, 51.0, pcb_thick]);
+        color(boardc) cube([39.0, 51.0, pcb_thick]);
         translate([2.75, 2.75, -interf]) {
             translate([   0,    0, 0]) cylinder(r=1.5, h=(2 + interf * 2), $fn=16);
             translate([33.5,    0, 0]) cylinder(r=1.5, h=(2 + interf * 2), $fn=16);
@@ -60,10 +86,10 @@ module board_2relays_sainsmart() {
             translate([33.5, 45.5, 0]) cylinder(r=1.5, h=(2 + interf * 2), $fn=16);
         }
     }
-    translate([ 3.8, 12.2, pcb_thick])  color("blue") cube([15, 19, 16]);
-    translate([20.2, 12.2, pcb_thick])  color("blue") cube([15, 19, 16]);
-    translate([ 3.8,    4, pcb_thick])  color("blue") cube([15, 8, 10.2]);
-    translate([20.2,    4, pcb_thick])  color("blue") cube([15, 8, 10.2]);
+    translate([ 3.8, 12.2, pcb_thick])  color(relayc) cube([15, 19, 16]);
+    translate([20.2, 12.2, pcb_thick])  color(relayc) cube([15, 19, 16]);
+    translate([ 3.8,    4, pcb_thick])  color(relayc) cube([15, 8, 10.2]);
+    translate([20.2,    4, pcb_thick])  color(relayc) cube([15, 8, 10.2]);
     translate([ 9, 46.5, 1.6]) pin_headers(4, 1);
     translate([ 9, 46.5, 1.6]) dupont_female(4, 1, [-1, 1, 0]);
     translate([24, 46.5, 1.6]) pin_headers(3, 1);
@@ -73,9 +99,10 @@ module board_2relays_sainsmart() {
 // Two-relays module manufactured by Keyes.
 //------------------------------------------------------------------------
 module board_2relays_keyes() {
+	boardc = $incolor ? "red" : undef;
     // Board with 3.6 mm holes.
     difference() {
-        color("red") cube([45.5, 55, 2]);
+        color(boardc) cube([45.5, 55, 2]);
         translate([3.5, 9, -interf]) {
             translate([ 0,  0, 0]) cylinder(r=1.8, h=(2 + interf * 2), $fn=16);
             translate([38,  0, 0]) cylinder(r=1.8, h=(2 + interf * 2), $fn=16);
@@ -83,8 +110,8 @@ module board_2relays_keyes() {
             translate([38, 40, 0]) cylinder(r=1.8, h=(2 + interf * 2), $fn=16);
         }
     }
-    translate([7.5, 15, 2])  color("blue") cube([15, 19, 16]);
-    translate([23, 15, 2])   color("blue") cube([15, 19, 16]);
+    translate([7.5, 15, 2])  color(relayc) cube([15, 19, 16]);
+    translate([23, 15, 2])   color(relayc) cube([15, 19, 16]);
     translate([14.5, 48, 2]) pin_headers(6, 1);
 }
 
@@ -93,8 +120,11 @@ module board_2relays_keyes() {
 // Pin on bottom, 3.2 mm holes spaced 34.5 x 41
 //------------------------------------------------------------------------
 module board_pcd8544_blue() {
+	boardc  = $incolor ? "darkblue" : undef;
+	shieldc = $incolor ? "silver"   : undef;
+
     difference() {
-        color("darkblue") cube([43, 45.5, 1.2]);
+        color(boardc) cube([43, 45.5, 1.2]);
         translate([4.25, 2.25, -interf]) {
             translate([ 0.0,  0, 0]) cylinder(r=1.6, h=(1.2 + interf * 2), $fn=16);
             translate([34.5,  0, 0]) cylinder(r=1.6, h=(1.2 + interf * 2), $fn=16);
@@ -105,7 +135,7 @@ module board_pcd8544_blue() {
     // Frame and LCD screen.
     difference() {
         translate([1.5, 6.0, 1.2])
-            color("silver") cube([40, 34, 4]);
+            color(shieldc) cube([40, 34, 4]);
         translate([3.25, 7.5, 1.2 + 4 - 0.5])
             cube([36.5, 26, 0.6]);
     }
@@ -121,8 +151,11 @@ module board_pcd8544_blue() {
 // Pin on top, 2.5 mm holes spaced 40 x 39
 //------------------------------------------------------------------------
 module board_pcd8544_red() {
+	boardc = $incolor ? "red"     : undef;
+	shieldc = $incolor ? "silver" : undef;
+
     difference() {
-        color("red") cube([43.5, 43.0, 1.2]);
+        color(boardc) cube([43.5, 43.0, 1.2]);
         translate([1.75, 2.0, -interf]) {
             translate([ 0,  0, 0]) cylinder(r=1.25, h=(1.2 + interf * 2), $fn=16);
             translate([40,  0, 0]) cylinder(r=1.25, h=(1.2 + interf * 2), $fn=16);
@@ -133,7 +166,7 @@ module board_pcd8544_red() {
     // Frame and LCD screen.
     difference() {
         translate([1.75, 5, 1.2])
-            color("silver") cube([40, 34, 4]);
+            color(shieldc) cube([40, 34, 4]);
         translate([3.5, 7, 1.2 + 4 - 0.5])
             cube([36.5, 26, 0.6]);
     }
@@ -150,10 +183,13 @@ module board_pcd8544_red() {
 module video_rca() {
     x = 10; y = 9.8; z = 13;
     d = 8.3; h = 9.5;
+	
+	shieldc = $incolor ? "silver" : undef;
+	
     color("yellow") cube([x, y, z]);
     translate([-h, y / 2, (d / 2) + 4])
         rotate(a=90, v=[0, 1, 0])
-            color("silver") cylinder(r=(d / 2), h=h);
+            color(shieldc) cylinder(r=(d / 2), h=h);
 }
 module audio_jack() {
     x = 11.4; y = 12; z = 10.2;
@@ -164,29 +200,37 @@ module audio_jack() {
             color("blue") cylinder(r=(d / 2), h=h);
 }
 module ethernet_connector(x, y, z) {
-    color("silver") cube([x, y, z]);
+    color($incolor ? "silver" : undef) cube([x, y, z]);
 }
 module usb_connector(x, y, z) {
     f = 0.6; // Flange
-    color("silver") cube([x, y, z]);
-    translate([-f, y - f, -f])
-        color("silver") cube([x + f * 2, f, z + f * 2]);
+	shieldc = $incolor ? "silver" : undef;
+    color(shieldc) { 
+		cube([x, y, z]);
+		translate([-f, y - f, -f])
+			cube([x + f * 2, f, z + f * 2]);
+	}
 }
 module hdmi_connector(x, y, z) {
-    color("silver") cube([x, y, z]);
+	shieldc = $incolor ? "silver" : undef;
+    color(shieldc) cube([x, y, z]);
 }
 module microusb_connector(x, y, z) {
-    color("silver") cube([x, y, z]);
+	shieldc = $incolor ? "silver" : undef;
+    color(shieldc) cube([x, y, z]);
 }
 module capacitor(d, h) {
-    color("silver") cylinder(r=(d / 2), h=h);
+	shieldc = $incolor ? "silver" : undef;
+    color(shieldc) cylinder(r=(d / 2), h=h);
 }
 module micro_sd_card() {
-    color("silver")   translate([0,  0.0, -1.5]) cube([14, 13, 1.5]);
-    color("darkblue") translate([2, -3.2, -1.0]) cube([11, 15, 1.0]);
+	shieldc = $incolor ? "silver" : undef;
+    color(shieldc)   translate([0,  0.0, -1.5]) cube([14, 13, 1.5]);
+    color($incolor ? "darkblue" : undef) translate([2, -3.2, -1.0]) cube([11, 15, 1.0]);
 }
 module audio_video(size_x) {
-    color([58/255, 58/255, 58/255]) {
+	avc = $incolor ? [58/255, 58/255, 58/255] : undef;
+    color(avc) {
         cube([size_x, 7, 5.6]);
         translate([size_x, 7 / 2, 5.6 / 2]) rotate([0,90,0]) cylinder(d=5.6, h=2.6);
     }
@@ -221,7 +265,7 @@ module board_raspberrypi_model_b_v2() {
         translate([49.35, 12.75])                  capacitor(6.5, 8);
         translate([18.8 + 0.625, 83, 10.4])        wifi_usb_edimax();
         translate([0, 0, -z]) {
-            color("green") linear_extrude(height=z)
+            color(boardc) linear_extrude(height=z)
                 difference() {
                     square([x, y]);
                     raspberrypi_model_b_v2_holes();
@@ -235,8 +279,16 @@ module board_raspberrypi_model_b_v2() {
 //------------------------------------------------------------------------
 module raspberrypi_model_b_v2_holes() {
     x = 56; y = 85;
-    translate([(x - 18), 25.5]) circle(r=(2.9 / 2), $fn=16);
-    translate([12.5, (y - 5)])  circle(r=(2.9 / 2), $fn=16);
+	holes=[
+		[(x - 18), 25.5],
+		[12.5, (y - 5)] 
+	];
+	
+	if ($children > 0) {
+		array_holes(pos=holes) children();
+	} else {
+		array_holes(pos=holes) m25_standard_hole();		
+	}
 }
 
 //------------------------------------------------------------------------
@@ -261,7 +313,7 @@ module board_raspberrypi_model_a_plus_rev1_1() {
         translate([18.6, y - 6, 1.4])               wifi_usb_edimax();
         translate([x + 2.2, 10.55, 1.2])            rotate(a=270, v=[0, 0, 1]) usb_male_micro_b_connector();
         translate([0, 0, -z]) {
-            color("green") linear_extrude(height=z)
+            color(boardc) linear_extrude(height=z)
                 difference() {
                     hull() {
                         translate([  3,   3]) circle(r=3);
@@ -279,23 +331,34 @@ module board_raspberrypi_model_a_plus_rev1_1() {
 // Holes for the Raspberry Pi Model A+ rev.1.1.
 //------------------------------------------------------------------------
 module raspberrypi_model_a_plus_rev1_1_holes() {
-    x = 56;
-    translate([3.5, 3.5])            circle(r=(2.75 / 2), $fn=16);
-    translate([(x - 3.5), 3.5])      circle(r=(2.75 / 2), $fn=16);
-    translate([3.5, 3.5 + 58])       circle(r=(2.75 / 2), $fn=16);
-    translate([(x - 3.5), 3.5 + 58]) circle(r=(2.75 / 2), $fn=16);
+ 	off=3.5;
+	x=49 + off;
+	y=58 + off;
+	holes=[
+		[off,off], [x, off],
+		[off, y],  [x, y]
+	];
+	
+	if ($children > 0) {
+		array_holes(pos=holes) children();
+	} else {
+		array_holes(pos=holes) m25_standard_hole();		
+	}
 }
 
 
 //------------------------------------------------------------------------
 // Raspberry Pi 3 Model B v.1.2.
 //------------------------------------------------------------------------
-module board_raspberrypi_3_model_b() {
+module board_raspberrypi_3_model_b(microusb=true) {
     x  = 56;     y = 85;    z = 1.60;  // Measured PCB size
     ex = 15.9; ey = 21.5; ez = 13.5;   // Ethernet measure
     ux = 13.1; uy = 17.1; uz = 15.5;   // Measured USB connector size
     hx = 11.40; hy = 15.1; hz = 6.15;  // Measured HDMI connector size
     mx =  5.60; my =  7.6; mz = 2.40;  // Measured micro USB power connector size
+
+	boardc  = $incolor ? "green"  : undef;
+
     // The origin is the lower face of PCB.
     translate([0, 0, z]) {
         translate([1.0, 7.1, 0])                    pin_headers(2, 20);
@@ -306,9 +369,10 @@ module board_raspberrypi_3_model_b() {
         translate([x - 12.8, 50, 0])                audio_video(12.8);
         translate([20.5, 0.8, -z])                  micro_sd_card();
         translate([x - mx + 1, 7, 0])               microusb_connector(mx, my, mz);
-        translate([x + 2.2, 10.55, 1.2])            rotate(a=270, v=[0, 0, 1]) usb_male_micro_b_connector();
+        if (microusb)
+			translate([x + 2.2, 10.55, 1.2])            rotate(a=270, v=[0, 0, 1]) usb_male_micro_b_connector();
         translate([0, 0, -z]) {
-            color("green") linear_extrude(height=z)
+            color(boardc) linear_extrude(height=z)
                 difference() {
                     hull() {
                         translate([  3,   3]) circle(r=3);
@@ -325,6 +389,7 @@ module board_raspberrypi_3_model_b() {
 //------------------------------------------------------------------------
 // Holes for the Raspberry Pi B+, 2B, 3B, 3B+ and 4B Models.
 //------------------------------------------------------------------------
+
 module raspberrypi_3_model_b_holes() {
     x0 = 3.5; y0 = 3.5; x = 49; y = 58;
     translate([x0, y0]) {
@@ -385,13 +450,17 @@ module board_raspberrypi_4_model_b() {
 // GPS u-blox NEO-6M.
 //------------------------------------------------------------------------
 module ublox_neo6m_gps() {
+	pinc   = $incolor ? "gold"                    : undef;
+	shieldc = $incolor ? "silver"                 : undef;
+	boardc = $incolor ? [239/255, 32/255, 64/255] : undef;
+	
     x = 24; y = 36; z = 0.80;
     holes_x = 18;
     holes_y = 30;
     hole_off_x = (x - holes_x) / 2;
     hole_off_y = (y - holes_y) / 2;
     pin_off_x = (x - 2.54 * 5) / 2;
-    color([239/255, 32/255, 64/255]) linear_extrude(height=z) {
+    color(boardc) linear_extrude(height=z) {
         difference() {
            square(size = [x, y]);
            translate([hole_off_x, hole_off_y]) circle(r=1.5, center=true, $fn=24);
@@ -400,8 +469,8 @@ module ublox_neo6m_gps() {
            translate([hole_off_x + holes_x, hole_off_y + holes_y]) circle(r=1.5, center=true, $fn=24);
         }
     }
-    translate([2, 12, z]) color("silver") cube(size=[15, 12, 2.4]);
-    translate([9, 33, z+0.7]) color("gold") cylinder(r=1.3, h=1.4, center=true, $fn=24);
+    translate([2, 12, z]) color(shieldc) cube(size=[15, 12, 2.4]);
+    translate([9, 33, z+0.7]) color(pinc) cylinder(r=1.3, h=1.4, center=true, $fn=24);
     //translate([pin_off_x, 3.54, 0]) rotate(a=180, v=[1, 0, 0]) pin_headers(5, 1);
     translate([pin_off_x, 3.54, 0]) rotate(a=180, v=[1, 0, 0]) pin_right_angle_low(5, 1);
 }
@@ -412,13 +481,16 @@ module ublox_neo6m_gps() {
 module bme280_gybmep() {
     x = 10.5; y = 14; z = 1.5;
     pin_off_x = (x - 2.54 * 4) / 2;
-    color([134/255, 49/255, 117/255]) linear_extrude(height=z) {
+	boardc  = $incolor ? [134/255, 49/255, 117/255] : undef;
+    shieldc = $incolor ? "silver" : undef;
+	
+	color(boardc) linear_extrude(height=z) {
         difference() {
             square(size = [x, y]);
             translate([2.8, 10.9]) circle(r=1.5, center=true, $fn=24);
         }
     }
-    translate([6.0, 9.6, z]) color("silver") cube(size=[2.5, 2.5, 0.93]);
+    translate([6.0, 9.6, z]) color(shieldc) cube(size=[2.5, 2.5, 0.93]);
     //translate([pin_off_x, 2.54, 0]) rotate(a=180, v=[1, 0, 0]) pin_headers(4, 1);
     translate([pin_off_x, 2.54, 0]) rotate(a=180, v=[1, 0, 0]) pin_right_angle_low(4, 1);
 }
@@ -428,14 +500,17 @@ module bme280_gybmep() {
 //------------------------------------------------------------------------
 module mpu6050_gy521() {
     x = 21; y = 15.6; z = 1.2;
-    color([30/255, 114/255, 198/255]) linear_extrude(height=z) {
+	
+	boardc = $incolor ? [30/255, 114/255, 198/255] : undef; 
+	sensec = $incolor ? [60/255, 60/255, 60/255]   : undef;
+    color(boardc) linear_extrude(height=z) {
         difference() {
             square(size = [x, y]);
             translate([3, y-3]) circle(r=1.5, center=true, $fn=24);
             translate([x-3, y-3]) circle(r=1.5, center=true, $fn=24);
         }
     }
-    translate([8.3, 5.6, z]) color([60/255, 60/255, 60/255]) cube(size=[4.0, 4.0, 0.9]);
+    translate([8.3, 5.6, z]) color(sensec) cube(size=[4.0, 4.0, 0.9]);
     //translate([0.34, 2.54, 0]) rotate(a=180, v=[1, 0, 0]) pin_headers(8, 1);
     translate([0.34, 2.54, 0]) rotate(a=180, v=[1, 0, 0]) pin_right_angle_low(8, 1);
 }
@@ -446,14 +521,18 @@ module mpu6050_gy521() {
 module qmc5883l_gy273() {
     x = 13.6; y = 18.5; z = 1.15;
     pin_off_x = (x - 2.54 * 5) / 2;
-    color([30/255, 114/255, 198/255]) linear_extrude(height=z) {
+	
+	sensorc = $incolor ? [30/255, 114/255, 198/255] : undef;
+	boardc  = $incolor ? [60/255, 60/255, 60/255]   : undef;
+	
+    color(sensorc) linear_extrude(height=z) {
         difference() {
             square(size = [x, y]);
             translate([2.5, y-3]) circle(r=1.5, center=true, $fn=24);
             translate([x-2.5, y-3]) circle(r=1.5, center=true, $fn=24);
         }
     }
-    translate([5.1, 8.3, z]) color([60/255, 60/255, 60/255]) cube(size=[3.0, 3.0, 0.9]);
+    translate([5.1, 8.3, z]) color(boardc) cube(size=[3.0, 3.0, 0.9]);
     //translate([pin_off_x, 2.54, 0]) rotate(a=180, v=[1, 0, 0]) pin_headers(5, 1);
     translate([pin_off_x, 2.54, 0]) rotate(a=180, v=[1, 0, 0]) pin_right_angle_low(5, 1);
 }
