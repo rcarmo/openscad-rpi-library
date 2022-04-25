@@ -59,7 +59,7 @@ See the **[img/README.md file](img/README.md)** for a gallery of snapshot images
 
 * USB external hard disk 2.5" (Toshiba)
 * SATA 3.5 inches hard disk
-* UBS 2.0 hub 7 ports, Amazon Basics
-* UBS 3.0 hub 4 ports, Amazon Basics (**WARNING**: does not work with the Raspberry Pi, VIA Labs chip, USB ID 2109:2811)
+* USB 2.0 hub 7 ports, Amazon Basics
+* USB 3.0 hub 4 ports, Amazon Basics (**WARNING**: does not work with the Raspberry Pi, VIA Labs chip, USB ID 2109:2811)
 * UGREEN USB Audio Adapter
 * Nano WiFi USB dongle by Edimax
